@@ -8,6 +8,7 @@ export default function navbar() {
         <Link to="/">
           <h1>Workout Buddy</h1>
         </Link>
+        <a href="https://github.com/zhangwy324/Workout-App">GitHub</a>
       </div>
     </header>
   );
