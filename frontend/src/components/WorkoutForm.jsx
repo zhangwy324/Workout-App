@@ -1,8 +1,11 @@
 import React, { useState } from "react";
+import { useAuthContext } from "../hooks/useAuthContext";
+import { useLogout } from "../hooks/useLogout";
 import { useWorkoutsContext } from "../hooks/useWorkoutsContext";
 
 export default function WorkoutForm() {
   const { dispatch } = useWorkoutsContext();
+  const { user, dispatch: authDispatch } = useAuthContext();
 
   const [title, setTitle] = useState("");
   const [load, setLoad] = useState("");
@@ -12,17 +15,28 @@ export default function WorkoutForm() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (!user) {
+      setError("You must be logged in");
+      return;
+    }
     const workout = { title, load, reps };
     const response = await fetch("/api/workouts", {
       method: "POST",
       body: JSON.stringify(workout),
       headers: {
         "Content-Type": "application/json",
+        Authorization: `Bearer ${user.token}`,
       },
     });
     const json = await response.json();
 
     if (!response.ok) {
+      console.log("json is:", json);
+      if (json.error === "TokenExpiredError") {
+        localStorage.removeItem("user");
+        authDispatch({ type: "LOGOUT" });
+        dispatch({ type: "SET_WORKOUTS", payload: null });
+      }
       setError(json.error);
       setEmptyFields(json.emptyFields);
     }
